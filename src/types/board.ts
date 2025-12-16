@@ -23,3 +23,8 @@ export type TextItem = BoardItemBase & {
 };
 
 export type BoardItem = ImageItem | ColorItem | TextItem;
+
+export type Board = {
+    id: string;
+    items: BoardItem[];
+}
