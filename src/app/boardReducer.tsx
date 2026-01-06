@@ -1,4 +1,5 @@
-import type { Board, BoardItem } from "../types/board";
+import type { Board } from "../types/board";
+import { createTextItem, createColorItem } from "./itemFactory";
 
 export type BoardState = {
     board: Board;
@@ -53,6 +54,44 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
                     ...state.board,
                     items: state.board.items.map((item) => item.id === id ? { ...item, x, y } : item)
                 }
+            };
+        }
+
+        case "ADD_COLOR_ITEM": {
+            const maxZ = state.board.items.reduce((acc, item) => Math.max(acc, item.zIndex), 0);
+
+            const newItem = createColorItem({
+                zIndex: maxZ + 1,
+                x: 80,
+                y: 80,
+            });
+
+            return {
+                ...state,
+                board: {
+                    ...state.board,
+                    items: [...state.board.items, newItem],
+                },
+                selectedItemId: newItem.id,
+            };
+        }
+
+        case "ADD_TEXT_ITEM": {
+            const maxZ = state.board.items.reduce((acc, item) => Math.max(acc, item.zIndex), 0);
+
+            const newItem = createTextItem({
+                zIndex: maxZ + 1,
+                x: 240,
+                y: 100,
+            });
+
+            return {
+                ...state,
+                board: {
+                    ...state.board,
+                    items: [...state.board.items, newItem],
+                },
+                selectedItemId: newItem.id,
             };
         }
 
