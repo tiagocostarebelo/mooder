@@ -31,15 +31,25 @@ const Canvas = ({ state, dispatch }: CanvasProps) => {
                 }
 
                 if (item.type === "text") {
-                    <TextItemView
-                        key={item.id}
-                        item={item}
-                        isSelected={isSelected}
-                        onSelect={handleSelect}
-                    />
+                    return (
+                        <TextItemView
+                            key={item.id}
+                            item={item}
+                            isSelected={isSelected}
+                            onSelect={handleSelect}
+                        />
+                    )
                 }
 
-                return null;
+                return (
+                    <div
+                        key={item.id}
+                        className="absolute text-xs text-red-600"
+                        style={{ left: item.x, top: item.y, zIndex: item.zIndex }}
+                    >
+                        Unhandled item type: {item.type}
+                    </div>
+                );
             })}
         </div>
     );
