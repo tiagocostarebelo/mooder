@@ -15,6 +15,8 @@ export type ImageItem = BoardItemBase & {
 export type ColorItem = BoardItemBase & {
     type: "color";
     hex: string;
+    width: number;
+    height: number;
 };
 
 export type TextItem = BoardItemBase & {
