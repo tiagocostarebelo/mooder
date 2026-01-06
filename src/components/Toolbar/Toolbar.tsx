@@ -6,17 +6,7 @@ type ToolbarProps = {
 };
 
 const Toolbar = ({ state, dispatch }: ToolbarProps) => {
-    const moveSelectedRight = () => {
-        if (!state.selectedItemId) return;
 
-        const item = state.board.items.find((i) => i.id === state.selectedItemId);
-        if (!item) return;
-
-        dispatch({
-            type: "MOVE_ITEM",
-            payload: { id: item.id, x: item.x + 20, y: item.y },
-        });
-    };
 
     return (
         <div className="flex gap-2">
