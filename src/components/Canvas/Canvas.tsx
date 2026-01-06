@@ -1,11 +1,11 @@
-import { useReducer } from "react";
-import type { BoardItem } from "../../types/board";
-import { boardReducer, initialBoardState } from "../../app/BoardReducer";
+import type { BoardAction, BoardState } from "../../app/boardReducer";
 
+type CanvasProps = {
+    state: BoardState;
+    dispatch: React.Dispatch<BoardAction>;
+};
 
-
-const Canvas = () => {
-    const [state, dispatch] = useReducer(boardReducer, initialBoardState);
+const Canvas = ({ state, dispatch }: CanvasProps) => {
     const items = state.board.items;
 
     const handleSelect = (id: string) => {
@@ -13,7 +13,7 @@ const Canvas = () => {
     };
 
     return (
-        <div className="relative mx-auto mt-12 min-h-[600px] max-w-[1000px] w-full px-4 bg-white border rounded-lg">
+        <div className="relative min-h-[600px] w-full bg-white border rounded-lg">
             {items.map((item) => {
                 if (item.type === "color") {
                     return (
@@ -21,7 +21,7 @@ const Canvas = () => {
                             key={item.id}
                             type="button"
                             aria-label={`Color swatch ${item.hex}`}
-                            className={`absolute rounded-md border`}
+                            className="absolute rounded-md border"
                             onClick={() => handleSelect(item.id)}
                             style={{
                                 left: item.x,
@@ -30,14 +30,14 @@ const Canvas = () => {
                                 width: item.width,
                                 height: item.height,
                                 zIndex: item.zIndex,
-                                borderColor: state.selectedItemId === item.id ? "black" : "transparent",
+                                borderColor:
+                                    state.selectedItemId === item.id ? "black" : "transparent",
                             }}
                         />
                     );
-                };
+                }
 
                 if (item.type === "text") {
-                    console.log("Rendering text item:", item);
                     return (
                         <button
                             key={item.id}
@@ -48,7 +48,8 @@ const Canvas = () => {
                                 left: item.x,
                                 top: item.y,
                                 zIndex: item.zIndex,
-                                outline: state.selectedItemId === item.id ? "2px solid black" : "none",
+                                outline:
+                                    state.selectedItemId === item.id ? "2px solid black" : "none",
                                 borderRadius: 6,
                                 padding: "2px 6px",
                             }}
@@ -56,12 +57,12 @@ const Canvas = () => {
                             {item.text}
                         </button>
                     );
-                };
+                }
 
                 return null;
             })}
         </div>
-    )
-}
+    );
+};
 
-export default Canvas
+export default Canvas;
