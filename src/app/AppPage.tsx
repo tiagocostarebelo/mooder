@@ -9,7 +9,6 @@ const AppPage = () => {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Don’t hijack typing later (when we add text editing)
             const target = e.target as HTMLElement | null;
             const isTyping =
                 target?.tagName === "INPUT" ||
@@ -25,6 +24,16 @@ const AppPage = () => {
             let dx = 0;
             let dy = 0;
 
+            // Delete / Backspace removes selected item
+            if (e.key === "Delete" || e.key === "Backspace") {
+                if (!state.selectedItemId) return;
+
+                e.preventDefault();
+                dispatch({ type: "DELETE_ITEM", payload: { id: state.selectedItemId } });
+                return;
+            }
+
+            // Keyboard movement
             switch (e.key) {
                 case "ArrowLeft":
                     dx = -step;

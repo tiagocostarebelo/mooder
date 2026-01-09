@@ -13,6 +13,7 @@ export type BoardAction =
     | { type: "MOVE_ITEM"; payload: { id: string; x: number; y: number } }
     | { type: "MOVE_ITEM_BY"; payload: { id: string; dx: number; dy: number } }
     | { type: "BRING_TO_FRONT"; payload: { id: string } }
+    | { type: "DELETE_ITEM"; payload: { id: string } }
     | { type: "ADD_COLOR_ITEM" }
     | { type: "ADD_TEXT_ITEM" };
 
@@ -114,6 +115,21 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
                     ),
                 },
             };
+        }
+
+        case "DELETE_ITEM": {
+            const { id } = action.payload;
+
+            const nextItems = state.board.items.filter((item) => item.id !== id);
+
+            return {
+                ...state,
+                board: {
+                    ...state.board,
+                    items: nextItems,
+                },
+                selectedItemId: state.selectedItemId === id ? null : state.selectedItemId
+            }
         }
 
         case "ADD_COLOR_ITEM": {
