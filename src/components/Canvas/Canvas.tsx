@@ -6,9 +6,10 @@ import ImageItemView from "../items/ImageItemView";
 type CanvasProps = {
     state: BoardState;
     dispatch: React.Dispatch<BoardAction>;
+    boardRef: React.RefObject<HTMLDivElement | null>;
 };
 
-const Canvas = ({ state, dispatch }: CanvasProps) => {
+const Canvas = ({ state, dispatch, boardRef }: CanvasProps) => {
     const items = state.board.items;
 
     const handleSelect = (id: string) => {
@@ -17,7 +18,9 @@ const Canvas = ({ state, dispatch }: CanvasProps) => {
     };
 
     return (
-        <div className="relative min-h-[600px] w-full bg-white border rounded-lg"
+        <div
+            ref={boardRef}
+            className="relative bg-white border rounded-lg"
             style={{ width: state.board.width, height: state.board.height }}
             onPointerDown={() => dispatch({ type: "SELECT_ITEM", payload: { id: null } })}
         >

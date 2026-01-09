@@ -1,13 +1,37 @@
 import { useState } from "react";
+import * as htmlToImage from "html-to-image";
 import type { BoardAction, BoardState } from "../../app/boardReducer";
 
 type ToolbarProps = {
     state: BoardState;
     dispatch: React.Dispatch<BoardAction>;
+    boardRef: React.RefObject<HTMLDivElement | null>;
 };
 
-const Toolbar = ({ state, dispatch }: ToolbarProps) => {
+const Toolbar = ({ state, dispatch, boardRef }: ToolbarProps) => {
     const [imageUrl, setImageUrl] = useState("");
+
+    const exportPng = async () => {
+        const node = boardRef.current;
+        if (!node) return;
+
+        try {
+            const dataUrl = await htmlToImage.toPng(node, {
+                cacheBust: true,
+                pixelRatio: 2,
+            });
+
+            const link = document.createElement("a");
+            link.download = "moodboard.png";
+            link.href = dataUrl;
+            link.click();
+        } catch (err) {
+            console.error(err);
+            alert(
+                "Export failed. This is often caused by image URLs that block cross-origin export (CORS). Try a different image source."
+            )
+        }
+    }
 
     const moveSelectedFarRight = () => {
         if (!state.selectedItemId) return;
@@ -67,6 +91,12 @@ const Toolbar = ({ state, dispatch }: ToolbarProps) => {
             >
                 Move selected → x=5000
             </button>
+
+            <button
+                type="button"
+                className="rounded-md border bg-white px-3 py-1 text-sm"
+                onClick={exportPng}
+            >Export as PNG</button>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import AppLayout from "./AppLayout";
 import Canvas from "../components/Canvas/Canvas";
 import Toolbar from "../components/Toolbar/Toolbar";
@@ -6,6 +6,7 @@ import { boardReducer, initialBoardState } from "./boardReducer";
 
 const AppPage = () => {
     const [state, dispatch] = useReducer(boardReducer, initialBoardState);
+    const boardRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -67,9 +68,9 @@ const AppPage = () => {
     return (
         <AppLayout>
             <div className="mb-4">
-                <Toolbar state={state} dispatch={dispatch} />
+                <Toolbar state={state} dispatch={dispatch} boardRef={boardRef} />
             </div>
-            <Canvas state={state} dispatch={dispatch} />
+            <Canvas state={state} dispatch={dispatch} boardRef={boardRef} />
         </AppLayout>
     );
 };
