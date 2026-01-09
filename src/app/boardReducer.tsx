@@ -11,6 +11,7 @@ export type BoardState = {
 export type BoardAction =
     | { type: "SELECT_ITEM"; payload: { id: string | null } }
     | { type: "MOVE_ITEM"; payload: { id: string; x: number; y: number } }
+    | { type: "MOVE_ITEM_BY"; payload: { id: string; dx: number; dy: number } }
     | { type: "BRING_TO_FRONT"; payload: { id: string } }
     | { type: "ADD_COLOR_ITEM" }
     | { type: "ADD_TEXT_ITEM" };
@@ -69,6 +70,32 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
                 }
             };
         }
+
+        case "MOVE_ITEM_BY": {
+            const { id, dx, dy } = action.payload;
+
+            const target = state.board.items.find((item) => item.id === id);
+            if (!target) return state;
+
+            const nextX = target.x + dx;
+            const nextY = target.y + dy;
+
+            const { width, height } = getItemSize(target);
+
+            const clampedX = clamp(nextX, 0, state.board.width - width);
+            const clampedY = clamp(nextY, 0, state.board.height - height);
+
+            return {
+                ...state,
+                board: {
+                    ...state.board,
+                    items: state.board.items.map((item) =>
+                        item.id === id ? { ...item, x: clampedX, y: clampedY } : item
+                    ),
+                },
+            };
+        }
+
 
         case "BRING_TO_FRONT": {
             const { id } = action.payload;
