@@ -27,6 +27,7 @@ const Canvas = ({ state, dispatch }: CanvasProps) => {
                             item={item}
                             isSelected={isSelected}
                             onSelect={handleSelect}
+                            dispatch={dispatch}
                         />
                     );
                 }
@@ -38,6 +39,7 @@ const Canvas = ({ state, dispatch }: CanvasProps) => {
                             item={item}
                             isSelected={isSelected}
                             onSelect={handleSelect}
+                            dispatch={dispatch}
                         />
                     )
                 }
