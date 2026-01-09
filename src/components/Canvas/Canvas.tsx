@@ -1,6 +1,7 @@
 import type { BoardAction, BoardState } from "../../app/boardReducer";
 import ColorItemView from "../items/ColorItemView";
 import TextItemView from "../items/TextItemView";
+import ImageItemView from "../items/ImageItemView";
 
 type CanvasProps = {
     state: BoardState;
@@ -47,15 +48,19 @@ const Canvas = ({ state, dispatch }: CanvasProps) => {
                     )
                 }
 
-                return (
-                    <div
-                        key={item.id}
-                        className="absolute text-xs text-red-600"
-                        style={{ left: item.x, top: item.y, zIndex: item.zIndex }}
-                    >
-                        Unhandled item type: {item.type}
-                    </div>
-                );
+                if (item.type === "image") {
+                    return (
+                        <ImageItemView
+                            key={item.id}
+                            item={item}
+                            isSelected={isSelected}
+                            onSelect={handleSelect}
+                            dispatch={dispatch}
+                        />
+                    );
+                }
+
+                return null;
             })}
         </div>
     );

@@ -1,4 +1,4 @@
-import type { ColorItem, TextItem } from "../types/board";
+import type { ColorItem, TextItem, ImageItem } from "../types/board";
 
 const generatedId = () => crypto.randomUUID();
 
@@ -24,6 +24,20 @@ export function createTextItem(partial?: Partial<TextItem>): TextItem {
         x: 240,
         y: 100,
         zIndex: 2,
+        ...partial,
+    };
+}
+
+export function createImageItem(partial?: Partial<ImageItem>): ImageItem {
+    return {
+        id: generatedId(),
+        type: "image",
+        src: "https://placehold.co/320x220?text=Default+Image",
+        width: 320,
+        height: 220,
+        x: 120,
+        y: 120,
+        zIndex: 1,
         ...partial,
     };
 }

@@ -1,7 +1,7 @@
 import type { Board } from "../types/board";
 import { clamp } from "../utils/clamp";
 import { getItemSize } from "./itemBounds";
-import { createTextItem, createColorItem } from "./itemFactory";
+import { createTextItem, createColorItem, createImageItem } from "./itemFactory";
 
 export type BoardState = {
     board: Board;
@@ -17,6 +17,7 @@ export type BoardAction =
     | { type: "DELETE_ITEM"; payload: { id: string } }
     | { type: "ADD_COLOR_ITEM" }
     | { type: "ADD_TEXT_ITEM" }
+    | { type: "ADD_IMAGE_ITEM", payload: { src: string } }
     | { type: "UPDATE_TEXT"; payload: { id: string, text: string } }
 
 export const initialBoardState: BoardState = {
@@ -192,6 +193,29 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
                 zIndex: maxZ + 1,
                 x: 240,
                 y: 100,
+            });
+
+            return {
+                ...state,
+                board: {
+                    ...state.board,
+                    items: [...state.board.items, newItem],
+                },
+                selectedItemId: newItem.id,
+            };
+        }
+
+        case "ADD_IMAGE_ITEM": {
+            const maxZ = state.board.items.reduce((acc, item) => Math.max(acc, item.zIndex), 0);
+
+            const src = action.payload.src.trim();
+            if (!src) return state;
+
+            const newItem = createImageItem({
+                zIndex: maxZ + 1,
+                x: 120,
+                y: 120,
+                src,
             });
 
             return {

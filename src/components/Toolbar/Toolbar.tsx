@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { BoardAction, BoardState } from "../../app/boardReducer";
 
 type ToolbarProps = {
@@ -6,6 +7,7 @@ type ToolbarProps = {
 };
 
 const Toolbar = ({ state, dispatch }: ToolbarProps) => {
+    const [imageUrl, setImageUrl] = useState("");
 
     const moveSelectedFarRight = () => {
         if (!state.selectedItemId) return;
@@ -22,6 +24,26 @@ const Toolbar = ({ state, dispatch }: ToolbarProps) => {
 
     return (
         <div className="flex gap-2">
+            <input
+                className="w-80 rounded-md border bg-white px-2 py-1 text-sm"
+                placeholder="Paste image URL…"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+            />
+
+            <button
+                type="button"
+                className="rounded-md border bg-white px-3 py-1 text-sm"
+                onClick={() => {
+                    const src = imageUrl.trim();
+                    if (!src) return;
+                    dispatch({ type: "ADD_IMAGE_ITEM", payload: { src } });
+                    setImageUrl("");
+                }}
+            >
+                Add image
+            </button>
+
             <button
                 type="button"
                 className="rounded-md border bg-white px-3 py-1 text-sm"
