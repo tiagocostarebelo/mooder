@@ -13,6 +13,7 @@ export type BoardAction =
     | { type: "MOVE_ITEM"; payload: { id: string; x: number; y: number } }
     | { type: "MOVE_ITEM_BY"; payload: { id: string; dx: number; dy: number } }
     | { type: "BRING_TO_FRONT"; payload: { id: string } }
+    | { type: "RESIZE_ITEM"; payload: { id: string, width: number, height: number } }
     | { type: "DELETE_ITEM"; payload: { id: string } }
     | { type: "ADD_COLOR_ITEM" }
     | { type: "ADD_TEXT_ITEM" }
@@ -116,6 +117,38 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
                     ),
                 },
             };
+        }
+
+        case "RESIZE_ITEM": {
+            const { id, width, height } = action.payload;
+
+            const target = state.board.items.find((item) => item.id === id);
+            if (!target) return state;
+
+            // Do not allow any other item to resize other than color/image items
+            if (target.type !== "color" && target.type !== "image") return state;
+
+            const MIN_SIZE = 24;
+
+            // Prevent negative/too-small sizes
+            const nextWidth = Math.max(MIN_SIZE, Math.round(width));
+            const nextHeight = Math.max(MIN_SIZE, Math.round(height));
+
+            // Keep resize items inside the board based on current position
+            const maxWidth = state.board.width - target.x;
+            const maxHeight = state.board.height - target.y;
+
+            const clampedWidth = clamp(nextWidth, MIN_SIZE, maxWidth);
+            const clampedHeight = clamp(nextHeight, MIN_SIZE, maxHeight);
+
+            return {
+                ...state,
+                board: {
+                    ...state.board,
+                    items: state.board.items.map((item) =>
+                        item.id === id ? { ...item, width: clampedWidth, height: clampedHeight } : item)
+                }
+            }
         }
 
         case "DELETE_ITEM": {

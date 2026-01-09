@@ -90,12 +90,14 @@ const TextItemView = ({ item, isSelected, onSelect, dispatch }: TextItemViewProp
             className="absolute text-lg font-medium text-neutral-900 touch-none"
             onClick={() => onSelect(item.id)}
             onDoubleClick={(e) => {
+                e.stopPropagation();
                 e.preventDefault();
                 onSelect(item.id);
                 setIsEditing(true);
             }}
             // Disable dragging while editing by simply not calling pointer handlers in edit mode
             onPointerDown={(e) => {
+                e.stopPropagation();
                 onSelect(item.id);
                 dragHandlers.onPointerDown(e);
             }}

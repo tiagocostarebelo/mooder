@@ -17,7 +17,9 @@ const Canvas = ({ state, dispatch }: CanvasProps) => {
 
     return (
         <div className="relative min-h-[600px] w-full bg-white border rounded-lg"
-            style={{ width: state.board.width, height: state.board.height }}>
+            style={{ width: state.board.width, height: state.board.height }}
+            onPointerDown={() => dispatch({ type: "SELECT_ITEM", payload: { id: null } })}
+        >
             {items.map((item) => {
                 const isSelected = state.selectedItemId === item.id;
 
