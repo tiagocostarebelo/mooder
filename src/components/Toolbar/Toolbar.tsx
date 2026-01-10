@@ -15,6 +15,8 @@ const Toolbar = ({ state, dispatch, boardRef }: ToolbarProps) => {
     const selectedItem = state.selectedItemId ? state.board.items.find((item) => item.id === state.selectedItemId) : null;
     const selectedColorItem = selectedItem?.type === "color" ? selectedItem : null;
 
+    const urlRef = useRef<HTMLInputElement | null>(null);
+
     const exportPng = async () => {
         const node = boardRef.current;
         if (!node) return;
@@ -37,7 +39,18 @@ const Toolbar = ({ state, dispatch, boardRef }: ToolbarProps) => {
         }
     };
 
-    const urlRef = useRef<HTMLInputElement | null>(null);
+    const toggleAddColor = () => {
+        //if a color is added and is selected, toggle Off the color picker by deselecting it
+        if (selectedColorItem) {
+            dispatch({ type: "SELECT_ITEM", payload: { id: null } });
+            return;
+        }
+
+        // If no color is selected, Add Color Item
+        dispatch({ type: "ADD_COLOR_ITEM" })
+    }
+
+
 
     useEffect(() => {
         if (!isOpen) return;
@@ -83,9 +96,9 @@ const Toolbar = ({ state, dispatch, boardRef }: ToolbarProps) => {
                 <button
                     type="button"
                     className="whitespace-nowrap rounded-md border bg-white px-3 py-1 text-sm"
-                    onClick={() => dispatch({ type: "ADD_COLOR_ITEM" })}
+                    onClick={toggleAddColor}
                 >
-                    Add color
+                    {selectedColorItem ? "Close color" : "Add Color"}
                 </button>
 
                 <button
