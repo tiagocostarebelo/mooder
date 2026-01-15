@@ -64,10 +64,10 @@ export default function Toolbar({ state, dispatch, variant, onToast }: ToolbarPr
                         · <span className="text-white/80">Double-click</span> to edit text
                     </>
                 ) : null}
-                {selectedItem?.type === "image" || "color" ? (
+                {(selectedItem?.type === "image" || selectedItem?.type === "color") ? (
                     <>
                         {" "}
-                        · Drag corners resize ·<span className="text-white/80"> Shift </span> = keep constraints
+                        · Drag corner resize ·<span className="text-white/80"> Shift </span> = keep proportions
                     </>
                 ) : null}
             </p>

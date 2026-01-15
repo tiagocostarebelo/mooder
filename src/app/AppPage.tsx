@@ -100,7 +100,7 @@ export default function AppPage() {
             <span className="hidden text-white/60 md:inline">
                 Delete · ↑↓←→ nudge · Shift = 10px
                 {selectedItem?.type === "text" ? " · Double-click to edit" : ""}
-                {selectedItem?.type === "image" || "color" ? " · Drag corners resize · Shift = keep constraints" : ""}
+                {(selectedItem?.type === "image" || selectedItem?.type === "color") ? " · Drag corner resize · Shift = keep proportions" : ""}
             </span>
 
             {/* Mobile: keep compact */}
