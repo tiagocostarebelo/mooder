@@ -1,12 +1,191 @@
 import { useNavigate } from "react-router";
 import { Github, Play, Palette, Layers, MousePointer2, Zap, Download, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+
+type SectionVariant = "dark" | "light";
+
+type SectionShellProps = {
+    id: string;
+    variant: SectionVariant;
+    className?: string;
+    children: React.ReactNode;
+};
+
+type CardVariant = "dark" | "light";
+
+type CardProps = {
+    variant: CardVariant;
+    className?: string;
+    hover?: boolean;
+    children: React.ReactNode;
+};
+
+type RevealProps = {
+    show: boolean;
+    delayMs?: number;
+    className?: string;
+    children: React.ReactNode;
+};
+
+const Reveal = ({ show, delayMs = 0, className = "", children }: RevealProps) => {
+    const [reduceMotion, setReduceMotion] = React.useState(false);
+
+    React.useEffect(() => {
+        const media = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+        if (!media) return;
+
+        const update = () => setReduceMotion(media.matches);
+        update();
+
+        // Safari fallback
+        if (media.addEventListener) {
+            media.addEventListener("change", update);
+            return () => media.removeEventListener("change", update);
+        } else {
+            media.addListener(update);
+            return () => media.removeListener(update);
+        }
+    }, []);
+
+    if (reduceMotion) {
+        return <div className={className}>{children}</div>;
+    }
+
+    const delayClass =
+        delayMs === 0
+            ? ""
+            : delayMs === 100
+                ? "delay-100"
+                : delayMs === 150
+                    ? "delay-150"
+                    : delayMs === 200
+                        ? "delay-200"
+                        : delayMs === 250
+                            ? "delay-250"
+                            : delayMs === 300
+                                ? "delay-300"
+                                : delayMs === 350
+                                    ? "delay-350"
+                                    : delayMs === 400
+                                        ? "delay-400"
+                                        : delayMs === 450
+                                            ? "delay-450"
+                                            : delayMs === 500
+                                                ? "delay-500"
+                                                : "";
+
+    return (
+        <div
+            className={[
+                "transition-all duration-700 ease-out will-change-transform",
+                delayClass,
+                show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
+                className,
+            ].join(" ")}
+        >
+            {children}
+        </div>
+    );
+};
+
+const cardTokens = {
+    dark: {
+        base: "border-white/10 bg-white/5 text-white",
+        hover:
+            "hover:border-white/20 hover:bg-white/10 hover:shadow-2xl hover:shadow-purple-500/10 hover:scale-[1.02]",
+        shadow: "shadow-2xl",
+        backdrop: "backdrop-blur-xl",
+    },
+    light: {
+        base: "border-slate-200 bg-white/70 text-slate-900",
+        hover: "hover:border-slate-300 hover:bg-white/80 hover:shadow-2xl hover:scale-[1.02]",
+        shadow: "shadow-xl",
+        backdrop: "backdrop-blur-xl",
+    },
+} as const;
+
+const textTokens = {
+    dark: {
+        h: "text-white",
+        p: "text-slate-300",
+        muted: "text-slate-400",
+    },
+    light: {
+        h: "text-slate-900",
+        p: "text-slate-600",
+        muted: "text-slate-500",
+    },
+} as const;
+
+const Card = ({ variant, className = "", hover = true, children }: CardProps) => {
+    const t = cardTokens[variant];
+    return (
+        <div
+            className={[
+                "relative group overflow-hidden rounded-2xl border transition-all duration-500",
+                t.base,
+                t.shadow,
+                t.backdrop,
+                hover ? t.hover : "",
+                className,
+            ].join(" ")}
+        >
+            {children}
+        </div>
+    );
+};
+
+/**
+ * Alternating section wrapper:
+ * - dark: transparent (inherits page gradient) + dark orbs
+ * - light: white background + stronger orbs
+ */
+const SectionShell = ({ id, variant, className = "", children }: SectionShellProps) => {
+    const base = "relative overflow-hidden py-20";
+    const surface = variant === "dark" ? "bg-transparent" : "bg-white";
+
+    return (
+        <section id={id} data-animate-section className={`${base} ${surface} ${className}`}>
+            {/* Orb background */}
+            <div className="pointer-events-none absolute inset-0">
+                {variant === "dark" ? (
+                    <>
+                        <div className="absolute left-1/4 top-1/4 h-96 w-96 animate-pulse rounded-full bg-gradient-to-br from-pink-500/10 to-violet-500/10 blur-3xl" />
+                        <div className="absolute right-1/4 bottom-1/4 h-96 w-96 animate-pulse rounded-full bg-gradient-to-br from-cyan-500/10 to-blue-500/10 blur-3xl" />
+                    </>
+                ) : (
+                    <>
+                        <div className="absolute -left-24 top-10 h-[520px] w-[520px] animate-pulse rounded-full bg-gradient-to-br from-pink-500/20 to-violet-500/20 blur-3xl" />
+                        <div className="absolute -right-24 bottom-10 h-[520px] w-[520px] animate-pulse rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 blur-3xl" />
+                        <div className="absolute left-1/3 top-1/3 h-[420px] w-[420px] animate-pulse rounded-full bg-gradient-to-br from-amber-500/15 to-orange-500/15 blur-3xl" />
+                    </>
+                )}
+            </div>
+
+            {/* Subtle noise for light sections */}
+            {variant === "light" && (
+                <div
+                    className="pointer-events-none absolute inset-0 opacity-[0.04]"
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E")`,
+                    }}
+                />
+            )}
+
+            <div className="relative">{children}</div>
+        </section>
+    );
+};
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const [isVisible, setIsVisible] = useState(false);
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+    const isSectionVisible = (sectionId: string) => visibleSections.has(sectionId);
+
     useEffect(() => {
         setIsVisible(true);
 
@@ -18,402 +197,414 @@ const LandingPage = () => {
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, []);
 
-    // Intersection Observer for scroll-triggered animations
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setVisibleSections((prev) => new Set(prev).add(entry.target.id));
-                    }
+                setVisibleSections((prev) => {
+                    const next = new Set(prev);
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) next.add(entry.target.id);
+                    });
+                    return next;
                 });
             },
-            {
-                threshold: 0.1,
-                rootMargin: "0px 0px -100px 0px"
-            }
+            { threshold: 0.1, rootMargin: "0px 0px -100px 0px" }
         );
 
-        const sections = document.querySelectorAll('[data-animate-section]');
+        const sections = document.querySelectorAll<HTMLElement>("[data-animate-section]");
         sections.forEach((section) => observer.observe(section));
 
         return () => observer.disconnect();
     }, []);
 
-    const features = [
-        {
-            icon: Palette,
-            title: "Visual Freedom",
-            description: "Drag, drop, and arrange colors, text, and images exactly how you envision them.",
-            color: "from-pink-500 to-rose-500"
-        },
-        {
-            icon: Layers,
-            title: "Layer Control",
-            description: "Stack elements with precision. Bring forward, send back, and compose with confidence.",
-            color: "from-violet-500 to-purple-500"
-        },
-        {
-            icon: MousePointer2,
-            title: "Intuitive Design",
-            description: "Click to select, drag to move, double-click to edit. It just works.",
-            color: "from-blue-500 to-cyan-500"
-        },
-        {
-            icon: Zap,
-            title: "Keyboard Shortcuts",
-            description: "Arrow keys to nudge, Shift for precision, Delete to remove. Power user ready.",
-            color: "from-amber-500 to-orange-500"
-        },
-        {
-            icon: Download,
-            title: "Export Ready",
-            description: "Export high-quality PNG images of your moodboards instantly.",
-            color: "from-emerald-500 to-teal-500"
-        },
-        {
-            icon: Sparkles,
-            title: "Real-time Preview",
-            description: "See changes as you make them. No rendering. No waiting. Pure creation.",
-            color: "from-fuchsia-500 to-pink-500"
-        }
-    ];
+    const features = useMemo(
+        () => [
+            {
+                icon: Palette,
+                title: "Images, notes, and color",
+                description: "The essentials for moodboards, no extra modules to learn.",
+                color: "from-pink-500 to-rose-500",
+            },
+            {
+                icon: Layers,
+                title: "Simple layer control",
+                description: "Stack elements with precision. Bring forward and send back with a simple click.",
+                color: "from-violet-500 to-purple-500",
+            },
+            {
+                icon: MousePointer2,
+                title: "Canvas-first editing",
+                description: "Move elements freely, resize, and refine the layout as you think.",
+                color: "from-blue-500 to-cyan-500",
+            },
+            {
+                icon: Sparkles,
+                title: "Instant feedback",
+                description: "Edits happen immediately as you drag and adjust—no modal workflows.",
+                color: "from-fuchsia-500 to-pink-500",
+            },
+            {
+                icon: Zap,
+                title: "Keyboard shortcuts",
+                description: "Arrow keys to nudge, Shift for precision, Delete to remove. Power user ready.",
+                color: "from-amber-500 to-orange-500",
+            },
+            {
+                icon: Download,
+                title: "Export ready",
+                description: "Export high-quality PNG images of your moodboards instantly.",
+                color: "from-emerald-500 to-teal-500",
+            },
+        ],
+        []
+    );
 
-    const useCases = [
-        {
-            title: "Brand exploration",
-            description: "Collect references, explore direction, and align visually.",
-            gradient: "from-purple-500 to-indigo-500",
-            emoji: "🎨"
-        },
-        {
-            title: "UI inspiration",
-            description: "Gather interface patterns and design systems in one place.",
-            gradient: "from-blue-500 to-cyan-500",
-            emoji: "💡"
-        },
-        {
-            title: "Content planning",
-            description: "Map out campaigns with visuals, colors, and mood references.",
-            gradient: "from-orange-500 to-amber-500",
-            emoji: "📋"
-        },
-        {
-            title: "Creative direction",
-            description: "Present concepts clearly with visual storytelling.",
-            gradient: "from-pink-500 to-rose-500",
-            emoji: "✨"
-        }
-    ];
-
-    const isSectionVisible = (sectionId: string) => visibleSections.has(sectionId);
+    const useCases = useMemo(
+        () => [
+            {
+                title: "Brand direction",
+                description: "Collect references, test palettes, and align on a visual lane.",
+                gradient: "from-purple-500 to-indigo-500",
+                emoji: "🎨",
+            },
+            {
+                title: "UI moodboards",
+                description: "Capture patterns, components, and layout inspiration in one canvas.",
+                gradient: "from-blue-500 to-cyan-500",
+                emoji: "💡",
+            },
+            {
+                title: "Campaign planning",
+                description: "Map visual direction for launches, ads, and content themes.",
+                gradient: "from-orange-500 to-amber-500",
+                emoji: "📋",
+            },
+            {
+                title: "Client concepts",
+                description: "Present a direction clearly—without a heavy deck or toolchain.",
+                gradient: "from-pink-500 to-rose-500",
+                emoji: "✨",
+            },
+        ],
+        []
+    );
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
-            {/* Header - Sticky */}
+            {/* Header */}
             <header className="sticky top-0 z-50 border-b border-white/10 bg-black/20 backdrop-blur-xl">
                 <div className="container mx-auto flex items-center justify-between px-6 py-4">
-                    <div
-                        style={{
-                            opacity: isVisible ? 1 : 0,
-                            transform: isVisible ? "translateY(0)" : "translateY(-10px)",
-                            transition: "all 0.6s ease-out"
-                        }}
-                    >
+                    <Reveal show={isVisible} delayMs={0}>
                         <h1 className="text-lg font-semibold text-white">Mooder</h1>
-                        <p className="text-sm text-slate-400">Visual thinking, simplified</p>
-                    </div>
-                    <button
-                        onClick={() => navigate("/app")}
-                        className="rounded-lg bg-white/10 px-6 py-2.5 text-sm font-medium text-white backdrop-blur-xl transition-all hover:bg-white/20 hover:shadow-lg hover:shadow-purple-500/30 cursor-pointer"
-                        style={{
-                            opacity: isVisible ? 1 : 0,
-                            transform: isVisible ? "translateY(0)" : "translateY(-10px)",
-                            transition: "all 0.6s ease-out 0.1s"
-                        }}
-                    >
-                        Open editor
-                    </button>
+                        <p className="text-sm text-slate-400">MVP · Visual thinking on a canvas</p>
+                    </Reveal>
+
+                    <Reveal show={isVisible} delayMs={100}>
+                        <button
+                            onClick={() => navigate("/app")}
+                            className="cursor-pointer rounded-lg bg-white/10 px-6 py-2.5 text-sm font-medium text-white backdrop-blur-xl transition-all hover:bg-white/20 hover:shadow-lg hover:shadow-purple-500/30"
+                        >
+                            Start creating
+                        </button>
+                    </Reveal>
                 </div>
             </header>
 
-            {/* Hero Section */}
+            {/* Hero (dark) */}
             <section id="hero" data-animate-section className="relative overflow-hidden py-20 md:py-32">
-                {/* Enhanced gradient orbs with pulsing */}
                 <div className="pointer-events-none absolute inset-0">
                     <div
-                        className="absolute h-[600px] w-[600px] rounded-full bg-gradient-to-r from-pink-500/20 to-violet-500/20 blur-3xl"
+                        className="absolute h-[600px] w-[600px] rounded-full bg-gradient-to-r from-pink-500/20 to-violet-500/20 blur-3xl transition-transform duration-300 ease-out"
                         style={{
-                            top: mousePosition.y * 0.02 - 300,
-                            left: mousePosition.x * 0.02 - 300,
-                            transition: "all 0.3s ease-out"
+                            transform: `translate(${mousePosition.x * 0.02 - 300}px, ${mousePosition.y * 0.02 - 300}px)`,
                         }}
                     />
                     <div
-                        className="absolute h-[500px] w-[500px] rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl"
+                        className="absolute h-[500px] w-[500px] rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl transition-transform duration-300 ease-out"
                         style={{
-                            bottom: mousePosition.y * -0.015,
-                            right: mousePosition.x * -0.015,
-                            transition: "all 0.3s ease-out"
+                            transform: `translate(${mousePosition.x * -0.015}px, ${mousePosition.y * -0.015}px)`,
                         }}
                     />
                     <div className="absolute left-1/4 top-1/3 h-[400px] w-[400px] animate-pulse rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 blur-3xl" />
                 </div>
 
-                {/* Noise texture */}
                 <div
                     className="pointer-events-none absolute inset-0 opacity-[0.015]"
                     style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E")`
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E")`,
                     }}
                 />
 
                 <div className="container relative mx-auto px-6">
                     <div className="mx-auto max-w-4xl text-center">
-                        <h1
-                            className="mb-6 text-5xl font-black leading-tight tracking-tight text-white md:text-7xl lg:text-8xl transition-all duration-700"
-                            style={{
-                                opacity: isVisible ? 1 : 0,
-                                transform: isVisible ? "translateY(0)" : "translateY(30px)",
-                                transitionDelay: "300ms",
-                                fontFamily: "'Space Grotesk', sans-serif"
-                            }}
-                        >
-                            Compose Your
-                            <span className="relative mx-3 inline-block">
-                                <span className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 blur-xl opacity-70" />
-                                <span className="relative bg-gradient-to-r from-pink-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                                    Vision
+                        <Reveal show={isVisible} delayMs={300}>
+                            <h1
+                                className="mb-6 text-5xl font-black leading-tight tracking-tight text-white md:text-7xl lg:text-8xl"
+                                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                            >
+                                Compose Your
+                                <span className="relative mx-3 inline-block">
+                                    <span className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 blur-xl opacity-70" />
+                                    <span className="relative bg-gradient-to-r from-pink-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
+                                        Vision
+                                    </span>
                                 </span>
-                            </span>
-                        </h1>
+                            </h1>
+                        </Reveal>
 
-                        <p
-                            className="mb-10 text-lg leading-relaxed text-slate-300 md:text-xl"
-                            style={{
-                                opacity: isVisible ? 1 : 0,
-                                transform: isVisible ? "translateY(0)" : "translateY(20px)",
-                                transition: "all 0.6s ease-out 0.1s"
-                            }}
-                        >
-                            A simple, focused moodboard tool for designers, creators, and thinkers. <br />Collect colors, images, and notes without friction.
-                        </p>
+                        <Reveal show={isVisible} delayMs={100}>
+                            <p className="mb-10 text-lg leading-relaxed text-slate-300 md:text-xl">
+                                For designers, creators, and teams shaping ideas.
+                                <br />
+                                Collect images, colors, and notes in one place—no file saving, no heavy editor, no endless menus.
+                            </p>
+                        </Reveal>
 
-                        <div
-                            className="flex flex-col items-center justify-center gap-4 sm:flex-row"
-                            style={{
-                                opacity: isVisible ? 1 : 0,
-                                transform: isVisible ? "translateY(0)" : "translateY(20px)",
-                                transition: "all 0.6s ease-out 0.2s"
-                            }}
-                        >
-                            <button
-                                onClick={() => navigate("/app")}
-                                className="rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-8 py-3.5 text-base font-medium text-white shadow-2xl shadow-purple-500/50 transition-all hover:scale-105 hover:shadow-purple-500/70 cursor-pointer"
-                            >
-                                Start creating
-                            </button>
-                            <button
-                                onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-                                className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-8 py-3.5 text-base font-medium text-white backdrop-blur-xl transition-all hover:bg-white/10 cursor-pointer"
-                            >
-                                <Play className="h-4 w-4" />
-                                Watch demo
-                            </button>
-                        </div>
+                        <Reveal show={isVisible} delayMs={200}>
+                            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                                <button
+                                    onClick={() => navigate("/app")}
+                                    className="cursor-pointer rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-8 py-3.5 text-base font-medium text-white shadow-2xl shadow-purple-500/50 transition-all hover:scale-105 hover:shadow-purple-500/70"
+                                >
+                                    Start creating
+                                </button>
 
-                        {/* App Preview Placeholder */}
-                        <div
-                            className="relative mt-16 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-800/90 p-8 shadow-2xl backdrop-blur-xl"
-                            style={{
-                                opacity: isVisible ? 1 : 0,
-                                transform: isVisible ? "translateY(0)" : "translateY(40px)",
-                                transition: "all 0.8s ease-out 0.4s"
-                            }}
-                        >
-                            {/* Pulsing glow */}
-                            <div className="absolute -inset-4 animate-pulse rounded-3xl bg-gradient-to-r from-pink-500/30 via-violet-500/30 to-cyan-500/30 blur-2xl" />
-
-                            <div className="relative aspect-video rounded-lg bg-white flex items-center justify-center shadow-2xl">
-                                <p className="text-slate-600">App preview / demo video</p>
+                                <button
+                                    onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })}
+                                    className="cursor-pointer flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-8 py-3.5 text-base font-medium text-white backdrop-blur-xl transition-all hover:bg-white/10"
+                                >
+                                    <Play className="h-4 w-4" />
+                                    Watch demo
+                                </button>
                             </div>
-                        </div>
+                        </Reveal>
+
+                        <Reveal show={isVisible} delayMs={400}>
+                            <Card variant="dark" className="mt-16 p-8" hover={false}>
+                                <div className="absolute -inset-4 animate-pulse rounded-3xl bg-gradient-to-r from-pink-500/30 via-violet-500/30 to-cyan-500/30 blur-2xl" />
+                                <div className="relative flex aspect-video items-center justify-center rounded-lg bg-white shadow-2xl">
+                                    <p className="text-slate-600">App preview / demo video</p>
+                                </div>
+                            </Card>
+                        </Reveal>
                     </div>
                 </div>
             </section>
 
-            {/* Social Proof / Credibility */}
-            <section id="social-proof" data-animate-section className="relative overflow-hidden bg-gradient-to-br from-slate-900/50 to-purple-900/30 py-20 backdrop-blur-sm">
+            {/* Showcase */}
+            <SectionShell id="showcase" variant="light">
                 <div className="container mx-auto px-6">
-                    <div className="mx-auto max-w-4xl">
-                        <div
-                            className="relative rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl md:p-12"
-                            style={{
-                                opacity: isSectionVisible('social-proof') ? 1 : 0,
-                                animation: isSectionVisible('social-proof') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                animationDelay: '100ms'
-                            }}
-                        >
-                            {/* Decorative corner accent */}
-                            <div className="absolute right-0 top-0 h-32 w-32 opacity-10">
-                                <div className="absolute right-4 top-4 h-16 w-16 rounded-full bg-gradient-to-br from-pink-500 to-violet-500" />
-                                <div className="absolute right-12 top-12 h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-500" />
+                    <div className="mx-auto max-w-6xl">
+                        <Reveal show={isSectionVisible("showcase")} delayMs={100} className="mb-10 text-center">
+                            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
+                                Built as a focused, design-first experiment.
+                            </h2>
+                            <p className="mt-3 text-lg text-slate-600">
+                                Mooder was built for the start of a project: collecting references, testing colors, and writing quick
+                                notes. Most workflows force you to download assets, open a bulky tool, and fight UI just to place a few
+                                images and swatches. Mooder keeps it simple: one canvas, the essentials, and you’re moving fast.
+                            </p>
+                        </Reveal>
+
+                        <div className="flex flex-col gap-6">
+                            {/* Row 1 */}
+                            <div className="flex flex-col gap-6 md:flex-row">
+                                <Reveal show={isSectionVisible("showcase")} delayMs={200} className="flex-[2]">
+                                    <Card variant="light" className="p-0" hover>
+                                        <div className="relative overflow-hidden rounded-2xl">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600 to-violet-500 opacity-90" />
+                                            <div className="relative p-6">
+                                                <div className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
+                                                    Canvas
+                                                </div>
+                                                <h3 className="mt-3 text-xl font-semibold text-white">Drag. Drop. Compose.</h3>
+                                                <p className="mt-2 text-sm text-white/90">
+                                                    Add elements and move them freely—no rigid layout grid.
+                                                </p>
+
+                                                <div className="mt-6 rounded-xl bg-white/15 p-4">
+                                                    <div className="grid grid-cols-6 gap-2">
+                                                        {Array.from({ length: 12 }).map((_, i) => (
+                                                            // eslint-disable-next-line react/no-array-index-key
+                                                            <div key={i} className="aspect-square rounded-md bg-white/25" />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </Reveal>
+
+                                <Reveal show={isSectionVisible("showcase")} delayMs={250} className="flex-1">
+                                    <Card variant="light" className="p-0" hover>
+                                        <div className="relative overflow-hidden rounded-2xl">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-rose-400 opacity-90" />
+                                            <div className="relative p-6">
+                                                <div className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
+                                                    Notes
+                                                </div>
+                                                <h3 className="mt-3 text-xl font-semibold text-white">Capture thoughts</h3>
+                                                <p className="mt-2 text-sm text-white/90">
+                                                    Write context next to references, where you’ll actually use it.
+                                                </p>
+                                                <div className="mt-6 space-y-2 rounded-xl bg-white/15 p-4">
+                                                    <div className="h-3 w-3/4 rounded bg-white/30" />
+                                                    <div className="h-3 w-full rounded bg-white/30" />
+                                                    <div className="h-3 w-5/6 rounded bg-white/30" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </Reveal>
                             </div>
 
-                            <div className="relative text-center">
-                                <div
-                                    className="mb-8 inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-500/10 px-4 py-2 text-sm font-medium text-pink-300 backdrop-blur-sm"
-                                    style={{
-                                        opacity: isSectionVisible('social-proof') ? 1 : 0,
-                                        animation: isSectionVisible('social-proof') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                        animationDelay: '200ms'
-                                    }}
-                                >
-                                    <Sparkles className="h-4 w-4" />
-                                    MVP Release
-                                </div>
-
-                                <p
-                                    className="mb-8 text-xl leading-relaxed text-white md:text-2xl"
-                                    style={{
-                                        opacity: isSectionVisible('social-proof') ? 1 : 0,
-                                        animation: isSectionVisible('social-proof') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                        animationDelay: '300ms'
-                                    }}
-                                >
-                                    Built as a focused, design-first experiment.
-                                    <br />
-                                    <span className="text-slate-300">No accounts. No clutter. Just your ideas.</span>
-                                </p>
-
-                                <div
-                                    className="flex flex-wrap items-center justify-center gap-8"
-                                    style={{
-                                        opacity: isSectionVisible('social-proof') ? 1 : 0,
-                                        animation: isSectionVisible('social-proof') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                        animationDelay: '400ms'
-                                    }}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-pink-500 to-rose-500">
-                                            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
+                            {/* Row 2 */}
+                            <div className="flex flex-col gap-6 md:flex-row">
+                                <Reveal show={isSectionVisible("showcase")} delayMs={300} className="flex-1">
+                                    <Card variant="light" className="p-0" hover>
+                                        <div className="relative overflow-hidden rounded-2xl">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-blue-500 opacity-90" />
+                                            <div className="relative p-6">
+                                                <div className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
+                                                    Colors
+                                                </div>
+                                                <h3 className="mt-3 text-xl font-semibold text-white">Palette blocks</h3>
+                                                <p className="mt-2 text-sm text-white/90">
+                                                    Drop colors onto the board to explore direction and contrast.
+                                                </p>
+                                                <div className="mt-6 grid grid-cols-5 gap-2 rounded-xl bg-white/15 p-4">
+                                                    {Array.from({ length: 10 }).map((_, i) => (
+                                                        // eslint-disable-next-line react/no-array-index-key
+                                                        <div key={i} className="aspect-square rounded-lg bg-white/25" />
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <span className="text-slate-300 font-medium">No accounts</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-500">
-                                            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                            </svg>
-                                        </div>
-                                        <span className="text-slate-300 font-medium">Open source</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
-                                            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                            </svg>
-                                        </div>
-                                        <span className="text-slate-300 font-medium">Free forever</span>
-                                    </div>
-                                </div>
+                                    </Card>
+                                </Reveal>
 
-                                <p
-                                    className="mt-8 text-sm text-slate-400"
-                                    style={{
-                                        opacity: isSectionVisible('social-proof') ? 1 : 0,
-                                        animation: isSectionVisible('social-proof') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                        animationDelay: '500ms'
-                                    }}
-                                >
-                                    Currently in MVP — feedback welcome
-                                </p>
+                                <Reveal show={isSectionVisible("showcase")} delayMs={350} className="flex-[2]">
+                                    <Card variant="light" className="p-0" hover>
+                                        <div className="relative overflow-hidden rounded-2xl">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-cyan-500 opacity-90" />
+                                            <div className="relative p-6">
+                                                <div className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
+                                                    Images
+                                                </div>
+                                                <h3 className="mt-3 text-xl font-semibold text-white">Image references</h3>
+                                                <p className="mt-2 text-sm text-white/90">
+                                                    Bring in images fast and compose them like a board, not a gallery.
+                                                </p>
+
+                                                <div className="mt-6 grid grid-cols-3 gap-3 rounded-xl bg-white/15 p-4">
+                                                    {Array.from({ length: 6 }).map((_, i) => (
+                                                        // eslint-disable-next-line react/no-array-index-key
+                                                        <div key={i} className="aspect-[4/3] rounded-lg bg-white/25" />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </Reveal>
+                            </div>
+
+                            {/* Row 3 */}
+                            <div className="flex flex-col gap-6 md:flex-row">
+                                <Reveal show={isSectionVisible("showcase")} delayMs={400} className="flex-[2]">
+                                    <Card variant="light" className="p-0" hover>
+                                        <div className="relative overflow-hidden rounded-2xl">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-700 opacity-95" />
+                                            <div className="relative p-6">
+                                                <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                                                    Focused workflow
+                                                </div>
+                                                <h3 className="mt-3 text-xl font-semibold text-white">Minimal UI</h3>
+                                                <p className="mt-2 text-sm text-white/80">One canvas. Full attention. Minimal controls.</p>
+
+                                                <div className="mt-6 rounded-xl bg-white/10 p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500" />
+                                                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500" />
+                                                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500" />
+                                                        <div className="ml-auto h-9 w-24 rounded-full bg-white/15" />
+                                                    </div>
+                                                    <div className="mt-4 space-y-2">
+                                                        <div className="h-3 w-2/3 rounded bg-white/15" />
+                                                        <div className="h-3 w-5/6 rounded bg-white/15" />
+                                                        <div className="h-3 w-1/2 rounded bg-white/15" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </Reveal>
+
+                                <Reveal show={isSectionVisible("showcase")} delayMs={450} className="flex-1">
+                                    <Card variant="light" className="p-0" hover>
+                                        <div className="relative overflow-hidden rounded-2xl">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-500 opacity-90" />
+                                            <div className="relative p-6">
+                                                <div className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
+                                                    Export
+                                                </div>
+                                                <h3 className="mt-3 text-xl font-semibold text-white">PNG-ready</h3>
+                                                <p className="mt-2 text-sm text-white/90">
+                                                    Download a crisp PNG when the board feels right.
+                                                </p>
+                                                <div className="mt-6 rounded-xl bg-white/15 p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-10 w-10 rounded-lg bg-white/25" />
+                                                        <div className="h-10 flex-1 rounded-lg bg-white/25" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </Reveal>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </SectionShell>
 
-            {/* Features Section */}
-            <section id="features" data-animate-section className="relative overflow-hidden py-20">
-                {/* Pulsing background orbs */}
-                <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute left-1/4 top-1/4 h-96 w-96 animate-pulse rounded-full bg-gradient-to-br from-pink-500/10 to-violet-500/10 blur-3xl" />
-                    <div className="absolute right-1/4 bottom-1/4 h-96 w-96 animate-pulse rounded-full bg-gradient-to-br from-cyan-500/10 to-blue-500/10 blur-3xl" />
-                </div>
-
-                <div className="container relative mx-auto px-6">
-                    <div
-                        className="mb-16 text-center"
-                        style={{
-                            opacity: isSectionVisible('features') ? 1 : 0,
-                            animation: isSectionVisible('features') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                            animationDelay: '100ms'
-                        }}
-                    >
-                        <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
-                            Everything You Need
+            {/* Features (dark) */}
+            <SectionShell id="features" variant="dark">
+                <div className="container mx-auto px-6">
+                    <Reveal show={isSectionVisible("features")} delayMs={100} className="mb-16 text-center">
+                        <h2 className={`mb-4 text-3xl font-bold md:text-4xl ${textTokens.dark.h}`}>
+                            What you can do on the canvas
                         </h2>
-                        <p className="text-lg text-slate-300">
-                            Built for speed, designed for creativity
-                        </p>
-                    </div>
+                        <p className={`text-lg ${textTokens.dark.p}`}>A small toolset that covers the full moodboard loop.</p>
+                    </Reveal>
 
                     <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {features.map((feature, index) => (
-                            <div
-                                key={feature.title}
-                                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl transition-all duration-500 hover:scale-105 hover:border-white/20 hover:bg-white/10"
-                                style={{
-                                    opacity: isSectionVisible('features') ? 1 : 0,
-                                    animation: isSectionVisible('features') ? 'fadeInUp 0.6s ease-out forwards' : 'none',
-                                    animationDelay: `${200 + index * 50}ms`
-                                }}
-                            >
-                                <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} shadow-lg`}>
-                                    <feature.icon className="h-6 w-6 text-white" />
-                                </div>
-                                <h3 className="mb-3 text-xl font-bold text-white">
-                                    {feature.title}
-                                </h3>
-                                <p className="leading-relaxed text-slate-300">
-                                    {feature.description}
-                                </p>
-                                <div className={`absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-gradient-to-br ${feature.color} opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-20`} />
-                            </div>
+                            <Reveal key={feature.title} show={isSectionVisible("features")} delayMs={200 + index * 50}>
+                                <Card variant="dark" className="p-8">
+                                    <div
+                                        className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} shadow-lg`}
+                                    >
+                                        <feature.icon className="h-6 w-6 text-white" />
+                                    </div>
+                                    <h3 className="mb-3 text-xl font-bold text-white">{feature.title}</h3>
+                                    <p className="leading-relaxed text-slate-300">{feature.description}</p>
+                                    <div
+                                        className={`absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-gradient-to-br ${feature.color} opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-20`}
+                                    />
+                                </Card>
+                            </Reveal>
                         ))}
                     </div>
                 </div>
-            </section>
+            </SectionShell>
 
-            {/* Why It's Different */}
-            <section id="philosophy" data-animate-section className="bg-gradient-to-br from-slate-900/50 to-purple-900/30 py-20 backdrop-blur-sm">
+            {/* Philosophy (light) */}
+            <SectionShell id="philosophy" variant="light">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-5xl">
                         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-                            {/* Left side - Main content */}
-                            <div>
-                                <div
-                                    className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-300 backdrop-blur-sm"
-                                    style={{
-                                        opacity: isSectionVisible('philosophy') ? 1 : 0,
-                                        animation: isSectionVisible('philosophy') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                        animationDelay: '100ms'
-                                    }}
-                                >
-                                    Our Philosophy
-                                </div>
-
-                                <h2
-                                    className="mb-8 text-3xl font-bold text-white md:text-4xl"
-                                    style={{
-                                        opacity: isSectionVisible('philosophy') ? 1 : 0,
-                                        animation: isSectionVisible('philosophy') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                        animationDelay: '200ms'
-                                    }}
-                                >
+                            <Reveal show={isSectionVisible("philosophy")} delayMs={200}>
+                                <h2 className="mb-8 text-3xl font-bold text-slate-900 md:text-4xl">
                                     Designed for thinking,
                                     <br />
                                     not managing.
@@ -421,233 +612,168 @@ const LandingPage = () => {
 
                                 <div className="space-y-6">
                                     {[
-                                        { text: "No accounts, no dashboards", icon: "🚫" },
+                                        { text: "No account. No workspaces", icon: "🚫" },
                                         { text: "No infinite menus", icon: "✨" },
-                                        { text: "One canvas, full focus", icon: "🎯" },
-                                        { text: "Works beautifully on desktop and tablet", icon: "💻" }
+                                        { text: "One canvas. Full attention", icon: "🎯" },
+                                        { text: "Made for desktop and tablet", icon: "💻" },
                                     ].map((item, index) => (
-                                        <div
+                                        <Reveal
+                                            // eslint-disable-next-line react/no-array-index-key
                                             key={index}
-                                            className="flex items-start gap-4 rounded-xl border border-transparent p-4 transition-all hover:border-white/10 hover:bg-white/5"
-                                            style={{
-                                                opacity: isSectionVisible('philosophy') ? 1 : 0,
-                                                animation: isSectionVisible('philosophy') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                                animationDelay: `${300 + index * 100}ms`
-                                            }}
+                                            show={isSectionVisible("philosophy")}
+                                            delayMs={300 + index * 100}
                                         >
-                                            <span className="text-2xl">{item.icon}</span>
-                                            <span className="text-lg text-slate-300">{item.text}</span>
-                                        </div>
+                                            <div className="flex items-start gap-4 rounded-xl border border-transparent p-4 transition-all hover:border-slate-200 hover:bg-slate-50">
+                                                <span className="text-2xl">{item.icon}</span>
+                                                <span className="text-lg text-slate-700">{item.text}</span>
+                                            </div>
+                                        </Reveal>
                                     ))}
                                 </div>
-                            </div>
 
-                            {/* Right side - Visual element */}
-                            <div
-                                className="relative"
-                                style={{
-                                    opacity: isSectionVisible('philosophy') ? 1 : 0,
-                                    animation: isSectionVisible('philosophy') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                    animationDelay: '400ms'
-                                }}
-                            >
-                                <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-                                    <div className="space-y-4">
-                                        <div className="h-4 w-3/4 rounded bg-white/10" />
-                                        <div className="h-4 w-full rounded bg-white/10" />
-                                        <div className="h-4 w-5/6 rounded bg-white/10" />
+                                <p className="mt-6 text-sm text-slate-500">
+                                    MVP note: collaboration, cloud libraries, and comments are intentionally out for now.
+                                </p>
+                            </Reveal>
 
-                                        <div className="my-6 grid grid-cols-3 gap-3">
-                                            <div className="aspect-square rounded-lg bg-gradient-to-br from-pink-500 to-rose-500" />
-                                            <div className="aspect-square rounded-lg bg-gradient-to-br from-violet-500 to-purple-500" />
-                                            <div className="aspect-square rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500" />
+                            <Reveal show={isSectionVisible("philosophy")} delayMs={400}>
+                                <div className="sticky top-24">
+                                    <Card variant="light" className="p-8" hover={false}>
+                                        <div className="space-y-4">
+                                            <div className="h-4 w-3/4 rounded bg-slate-200/70" />
+                                            <div className="h-4 w-full rounded bg-slate-200/70" />
+                                            <div className="h-4 w-5/6 rounded bg-slate-200/70" />
+
+                                            <div className="my-6 grid grid-cols-3 gap-3">
+                                                <div className="aspect-square rounded-lg bg-gradient-to-br from-pink-500 to-rose-500" />
+                                                <div className="aspect-square rounded-lg bg-gradient-to-br from-violet-500 to-purple-500" />
+                                                <div className="aspect-square rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500" />
+                                            </div>
+
+                                            <div className="h-4 w-2/3 rounded bg-slate-200/70" />
+                                            <div className="h-4 w-4/5 rounded bg-slate-200/70" />
                                         </div>
 
-                                        <div className="h-4 w-2/3 rounded bg-white/10" />
-                                        <div className="h-4 w-4/5 rounded bg-white/10" />
-                                    </div>
-
-                                    <div className="mt-6 text-center text-sm text-slate-400">
-                                        Visual composition preview
-                                    </div>
+                                        <div className="mt-6 text-center text-sm text-slate-500">Visual composition preview</div>
+                                    </Card>
                                 </div>
-                            </div>
+                            </Reveal>
                         </div>
                     </div>
                 </div>
-            </section>
+            </SectionShell>
 
-            {/* Demo / Preview Section */}
-            <section id="demo" data-animate-section className="relative overflow-hidden py-20">
-                {/* Pulsing decorative elements */}
-                <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute -left-20 top-20 h-64 w-64 animate-pulse rounded-full bg-gradient-to-br from-pink-500/20 to-violet-500/20 blur-3xl" />
-                    <div className="absolute -right-20 bottom-20 h-64 w-64 animate-pulse rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 blur-3xl" />
-                </div>
-
-                <div className="container relative mx-auto px-6">
-                    <div className="mx-auto max-w-4xl text-center">
-                        <h2
-                            className="mb-4 text-3xl font-bold text-white md:text-4xl"
-                            style={{
-                                opacity: isSectionVisible('demo') ? 1 : 0,
-                                animation: isSectionVisible('demo') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                animationDelay: '100ms'
-                            }}
-                        >
-                            See it in action.
-                        </h2>
-                        <p
-                            className="mb-12 text-lg text-slate-300"
-                            style={{
-                                opacity: isSectionVisible('demo') ? 1 : 0,
-                                animation: isSectionVisible('demo') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                animationDelay: '200ms'
-                            }}
-                        >
-                            A quick walkthrough of how a moodboard comes together.
-                        </p>
-
-                        <div
-                            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-800/90 p-8 shadow-2xl backdrop-blur-xl"
-                            style={{
-                                opacity: isSectionVisible('demo') ? 1 : 0,
-                                animation: isSectionVisible('demo') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                animationDelay: '300ms'
-                            }}
-                        >
-                            {/* Pulsing glow */}
-                            <div className="absolute -inset-4 animate-pulse rounded-3xl bg-gradient-to-r from-pink-500/30 via-violet-500/30 to-cyan-500/30 blur-2xl" />
-
-                            <div className="relative aspect-video rounded-lg bg-white flex items-center justify-center shadow-2xl">
-                                <div className="text-center">
-                                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-500 shadow-lg">
-                                        <Play className="h-10 w-10 text-white" />
-                                    </div>
-                                    <p className="text-lg font-medium text-slate-600">Demo video placeholder</p>
-                                    <p className="text-sm text-slate-400">Coming soon</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Use Cases */}
-            <section id="use-cases" data-animate-section className="bg-gradient-to-br from-slate-900/50 to-purple-900/30 py-20 backdrop-blur-sm">
+            {/* Demo (dark) */}
+            <SectionShell id="demo" variant="dark">
                 <div className="container mx-auto px-6">
-                    <div
-                        className="mb-16 text-center"
-                        style={{
-                            opacity: isSectionVisible('use-cases') ? 1 : 0,
-                            animation: isSectionVisible('use-cases') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                            animationDelay: '100ms'
-                        }}
-                    >
-                        <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
-                            Use cases
-                        </h2>
-                        <p className="text-lg text-slate-300">
-                            One tool, endless possibilities
-                        </p>
+                    <div className="mx-auto max-w-4xl text-center">
+                        <Reveal show={isSectionVisible("demo")} delayMs={100}>
+                            <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">See a board come together</h2>
+                            <p className="mb-4 text-lg text-slate-300">A quick walkthrough, from blank canvas to export.</p>
+                            <p className="mb-12 text-sm text-slate-400">Add images • drop a palette • export a PNG</p>
+                        </Reveal>
+
+                        <Reveal show={isSectionVisible("demo")} delayMs={300}>
+                            <Card variant="dark" className="p-8" hover={false}>
+                                <div className="absolute -inset-4 animate-pulse rounded-3xl bg-gradient-to-r from-pink-500/30 via-violet-500/30 to-cyan-500/30 blur-2xl" />
+
+                                <div className="relative flex aspect-video items-center justify-center rounded-lg bg-white shadow-2xl">
+                                    <div className="text-center">
+                                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-500 shadow-lg">
+                                            <Play className="h-10 w-10 text-white" />
+                                        </div>
+                                        <p className="text-lg font-medium text-slate-600">Demo video placeholder</p>
+                                        <p className="text-sm text-slate-400">Coming soon</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Reveal>
                     </div>
+                </div>
+            </SectionShell>
+
+            {/* Use Cases (light) */}
+            <SectionShell id="use-cases" variant="light">
+                <div className="container mx-auto px-6">
+                    <Reveal show={isSectionVisible("use-cases")} delayMs={100} className="mb-16 text-center">
+                        <h2 className="mb-4 text-3xl font-bold text-slate-900 md:text-4xl">Use it for real work</h2>
+                        <p className="text-lg text-slate-600">From early exploration to final direction.</p>
+                    </Reveal>
 
                     <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2 lg:grid-cols-4">
                         {useCases.map((useCase, index) => (
-                            <div
-                                key={useCase.title}
-                                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                                style={{
-                                    opacity: isSectionVisible('use-cases') ? 1 : 0,
-                                    animation: isSectionVisible('use-cases') ? 'fadeInUp 0.6s ease-out forwards' : 'none',
-                                    animationDelay: `${200 + index * 50}ms`
-                                }}
-                            >
-                                {/* Gradient background on hover */}
-                                <div className={`absolute inset-0 bg-gradient-to-br ${useCase.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-5`} />
-
-                                <div className="relative">
-                                    <div className="mb-4 text-4xl">{useCase.emoji}</div>
-                                    <h3 className="mb-3 text-lg font-semibold text-white">
-                                        {useCase.title}
-                                    </h3>
-                                    <p className="text-sm leading-relaxed text-slate-300">
-                                        {useCase.description}
-                                    </p>
-                                </div>
-
-                                {/* Decorative corner */}
-                                <div className={`absolute -bottom-8 -right-8 h-16 w-16 rounded-full bg-gradient-to-br ${useCase.gradient} opacity-20 blur-xl transition-opacity duration-300 group-hover:opacity-40`} />
-                            </div>
+                            <Reveal key={useCase.title} show={isSectionVisible("use-cases")} delayMs={200 + index * 50}>
+                                <Card variant="light" className="p-6">
+                                    <div
+                                        className={`absolute inset-0 bg-gradient-to-br ${useCase.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-[0.07]`}
+                                    />
+                                    <div className="relative">
+                                        <div className="mb-4 text-4xl">{useCase.emoji}</div>
+                                        <h3 className="mb-3 text-lg font-semibold text-slate-900">{useCase.title}</h3>
+                                        <p className="text-sm leading-relaxed text-slate-600">{useCase.description}</p>
+                                    </div>
+                                    <div
+                                        className={`absolute -bottom-8 -right-8 h-16 w-16 rounded-full bg-gradient-to-br ${useCase.gradient} opacity-25 blur-xl transition-opacity duration-300 group-hover:opacity-40`}
+                                    />
+                                </Card>
+                            </Reveal>
                         ))}
                     </div>
                 </div>
-            </section>
+            </SectionShell>
 
-            {/* Final CTA */}
-            <section id="cta" data-animate-section className="relative overflow-hidden py-20">
-                {/* Pulsing background orbs */}
-                <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute left-1/4 top-1/2 h-96 w-96 animate-pulse rounded-full bg-gradient-to-br from-pink-500/20 to-violet-500/20 blur-3xl" />
-                    <div className="absolute right-1/4 top-1/2 h-96 w-96 animate-pulse rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 blur-3xl" />
-                </div>
-
-                <div className="container relative mx-auto px-6">
+            {/* CTA (dark) */}
+            <SectionShell id="cta" variant="dark">
+                <div className="container mx-auto px-6">
                     <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-pink-500/10 via-violet-500/10 to-cyan-500/10 p-12 backdrop-blur-xl md:p-20">
                         <div className="absolute -right-20 -top-20 h-64 w-64 animate-pulse rounded-full bg-gradient-to-br from-pink-500/30 to-violet-500/30 blur-3xl" />
                         <div className="absolute -bottom-20 -left-20 h-64 w-64 animate-pulse rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 blur-3xl" />
 
                         <div className="relative text-center">
-                            <h2
-                                className="mb-8 text-3xl font-bold text-white md:text-4xl"
-                                style={{
-                                    opacity: isSectionVisible('cta') ? 1 : 0,
-                                    animation: isSectionVisible('cta') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                    animationDelay: '100ms'
-                                }}
-                            >
-                                Start your next moodboard.
-                            </h2>
+                            <Reveal show={isSectionVisible("cta")} delayMs={100}>
+                                <h2 className="mb-8 text-3xl font-bold text-white md:text-4xl">Start a new board in seconds.</h2>
+                            </Reveal>
 
-                            <div
-                                className="flex flex-col items-center justify-center gap-4 sm:flex-row"
-                                style={{
-                                    opacity: isSectionVisible('cta') ? 1 : 0,
-                                    animation: isSectionVisible('cta') ? 'fadeInUp 0.7s ease-out forwards' : 'none',
-                                    animationDelay: '200ms'
-                                }}
-                            >
-                                <button
-                                    onClick={() => navigate("/app")}
-                                    className="rounded-lg bg-white px-8 py-3.5 text-base font-bold text-slate-900 shadow-2xl transition-all hover:scale-105 hover:shadow-white/20 cursor-pointer"
-                                >
-                                    Open the editor
-                                </button>
-                                <a
-                                    href="https://github.com/tiagocostarebelo/mooder"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-8 py-3.5 text-base font-medium text-white backdrop-blur-xl transition-all hover:bg-white/10 cursor-pointer"
-                                >
-                                    <Github className="h-4 w-4" />
-                                    View on GitHub
-                                </a>
-                            </div>
+                            <Reveal show={isSectionVisible("cta")} delayMs={200}>
+                                <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                                    <button
+                                        onClick={() => navigate("/app")}
+                                        className="cursor-pointer rounded-lg bg-white px-8 py-3.5 text-base font-bold text-slate-900 shadow-2xl transition-all hover:scale-105 hover:shadow-white/20"
+                                    >
+                                        Open the editor
+                                    </button>
+                                    <a
+                                        href="https://github.com/tiagocostarebelo/mooder"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="cursor-pointer flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-8 py-3.5 text-base font-medium text-white backdrop-blur-xl transition-all hover:bg-white/10"
+                                    >
+                                        <Github className="h-4 w-4" />
+                                        View on GitHub
+                                    </a>
+                                </div>
+                            </Reveal>
                         </div>
                     </div>
                 </div>
-            </section>
+            </SectionShell>
 
             {/* Footer */}
             <footer className="border-t border-white/10 bg-black/20 py-12 backdrop-blur-xl">
                 <div className="container mx-auto px-6">
                     <div className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
                         <div>
-                            <p className="text-sm text-slate-400">
-                                © 2026 Mooder
-                            </p>
+                            <p className="text-sm text-slate-400">© 2026 Mooder</p>
                             <p className="mt-1 text-sm text-slate-500">
-                                Built by <a href="https://tiagocr.me" target="_blank">Tiago Costa Rebelo</a>
+                                Built by{" "}
+                                <a
+                                    href="https://tiagocr.me"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="underline underline-offset-4"
+                                >
+                                    Tiago Costa Rebelo
+                                </a>
                             </p>
                         </div>
                         <div className="flex items-center gap-6">
@@ -664,19 +790,6 @@ const LandingPage = () => {
                     </div>
                 </div>
             </footer>
-
-            <style>{`
-                @keyframes fadeInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(30px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-            `}</style>
         </div>
     );
 };

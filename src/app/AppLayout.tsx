@@ -1,12 +1,16 @@
 type AppLayoutProps = {
     children: React.ReactNode;
-    versionLabel?: string;      // "MVP" or "v0.0.1"
-    topRight?: React.ReactNode; // Export button etc.
+    versionLabel?: string;        // "MVP" or "v0.0.1"
+    topLeft?: React.ReactNode;    // optional
+    topCenter?: React.ReactNode;  // selection tips, etc.
+    topRight?: React.ReactNode;   // Export button etc.
 };
 
 export default function AppLayout({
     children,
     versionLabel = "MVP",
+    topLeft,
+    topCenter,
     topRight,
 }: AppLayoutProps) {
     return (
@@ -17,7 +21,9 @@ export default function AppLayout({
                     <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-500 shadow-lg shadow-purple-500/50" />
                         <div className="leading-tight">
-                            <a href="/" className="text-sm font-semibold tracking-tight text-white">Mooder</a>
+                            <a href="/" className="text-sm font-semibold tracking-tight text-white">
+                                Mooder
+                            </a>
                             <p className="text-xs text-slate-400">Editor</p>
                         </div>
                     </div>
@@ -26,10 +32,17 @@ export default function AppLayout({
                 </div>
             </header>
 
-            {/* TOP BAR (full width, not centered) */}
-            <div className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
-                <div className="flex w-full items-center justify-end px-4 py-3">
-                    {topRight}
+            {/* TOP BAR (3-column: left / center / right) */}
+            <div className="w-full h-16 border-b border-white/10 bg-black/20 backdrop-blur-xl">
+                <div className="w-full flex items-center justify-between px-4 py-3">
+                    {/* Left */}
+                    <div className="justify-self-start">{topLeft}</div>
+
+                    {/* Center */}
+                    <div className="justify-self-center">{topCenter}</div>
+
+                    {/* Right */}
+                    <div className="justify-self-end">{topRight}</div>
                 </div>
             </div>
 

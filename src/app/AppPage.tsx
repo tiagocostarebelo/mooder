@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import * as htmlToImage from "html-to-image";
 import AppLayout from "./AppLayout";
 import Canvas from "../components/Canvas/Canvas";
@@ -8,6 +8,11 @@ import { boardReducer, initialBoardState } from "./boardReducer";
 export default function AppPage() {
     const [state, dispatch] = useReducer(boardReducer, initialBoardState);
     const boardRef = useRef<HTMLDivElement | null>(null);
+
+    const selectedItem = useMemo(() => {
+        if (!state.selectedItemId) return null;
+        return state.board.items.find((i) => i.id === state.selectedItemId) ?? null;
+    }, [state.selectedItemId, state.board.items]);
 
     const exportPng = useCallback(async () => {
         const node = boardRef.current;
@@ -41,7 +46,6 @@ export default function AppPage() {
                 target?.getAttribute("contenteditable") === "true";
 
             if (isTyping) return;
-
             if (!state.selectedItemId) return;
 
             const step = e.shiftKey ? 10 : 1;
@@ -82,18 +86,52 @@ export default function AppPage() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [state.selectedItemId]);
 
+    const clearSelection = () =>
+        dispatch({ type: "SELECT_ITEM", payload: { id: null } });
+
+    // Center content (selection tips)
+    const selectionBar = state.selectedItemId ? (
+        <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80 backdrop-blur-xl">
+            <span className="rounded-full bg-white/10 px-2 py-1 text-[11px] font-semibold text-white/85">
+                Selected
+            </span>
+
+            {/* Desktop tips */}
+            <span className="hidden text-white/60 md:inline">
+                Delete · ↑↓←→ nudge · Shift = 10px
+                {selectedItem?.type === "text" ? " · Double-click to edit" : ""}
+                {selectedItem?.type === "image" || "color" ? " · Drag corners resize · Shift = keep constraints" : ""}
+            </span>
+
+            {/* Mobile: keep compact */}
+            <span className="md:hidden text-white/60">Delete · Nudge</span>
+
+            <button
+                type="button"
+                onClick={clearSelection}
+                className="ml-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/80 transition-colors hover:bg-white/10 cursor-pointer"
+            >
+                Clear
+            </button>
+        </div>
+    ) : null;
+
+    // Right content (export)
+    const exportButton = (
+        <button
+            type="button"
+            className="rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-4 py-2 mt-1 mb-2 text-sm font-medium text-white shadow-2xl shadow-purple-500/50 transition-all hover:scale-105 hover:shadow-purple-500/70 cursor-pointer"
+            onClick={exportPng}
+        >
+            Export PNG
+        </button>
+    );
+
     return (
         <AppLayout
             versionLabel="MVP"
-            topRight={
-                <button
-                    type="button"
-                    className="rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-4 py-2 text-sm font-medium text-white shadow-2xl shadow-purple-500/50 transition-all hover:scale-105 hover:shadow-purple-500/70 cursor-pointer"
-                    onClick={exportPng}
-                >
-                    Export PNG
-                </button>
-            }
+            topCenter={selectionBar}
+            topRight={exportButton}
         >
             {/* FULL-WIDTH EDITOR SHELL */}
             <div className="flex w-full">

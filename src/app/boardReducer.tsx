@@ -25,7 +25,7 @@ export const initialBoardState: BoardState = {
     board: {
         id: "board-1",
         width: 1000,
-        height: 600,
+        height: 700,
         items: [
 
         ],

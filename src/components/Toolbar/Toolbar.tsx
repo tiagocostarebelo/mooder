@@ -6,9 +6,10 @@ type ToolbarProps = {
     state: BoardState;
     dispatch: React.Dispatch<BoardAction>;
     variant: "sidebar" | "dock";
+    onToast?: (kind: "success" | "error" | "info", message: string) => void;
 };
 
-export default function Toolbar({ state, dispatch, variant }: ToolbarProps) {
+export default function Toolbar({ state, dispatch, variant, onToast }: ToolbarProps) {
     const [imageUrl, setImageUrl] = useState("");
     const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -21,30 +22,57 @@ export default function Toolbar({ state, dispatch, variant }: ToolbarProps) {
 
     const urlRef = useRef<HTMLInputElement | null>(null);
 
-
     useEffect(() => {
         if (!isSheetOpen) return;
         urlRef.current?.focus();
     }, [isSheetOpen]);
 
+    const canAddImage = imageUrl.trim().length > 0;
+
     const addImageFromUrl = () => {
         const src = imageUrl.trim();
-        if (!src) alert("Please enter an image url");
+        if (!src) {
+            onToast?.("info", "Paste an image URL first");
+            return;
+        }
+
         dispatch({ type: "ADD_IMAGE_ITEM", payload: { src } });
         setImageUrl("");
     };
 
     const toggleAddColor = () => {
-        //if a color is added and is selected, toggle Off the color picker by deselecting it
+        // if a color is added and is selected, toggle off the color picker by deselecting it
         if (selectedColorItem) {
             dispatch({ type: "SELECT_ITEM", payload: { id: null } });
             return;
         }
 
-        // If no color is selected, Add Color Item
-        dispatch({ type: "ADD_COLOR_ITEM" })
-    }
+        // If no color is selected, add color item
+        dispatch({ type: "ADD_COLOR_ITEM" });
+    };
 
+    const TipsBox = (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+            <p className="text-xs font-semibold text-white/70">Tips</p>
+            <p className="mt-2 text-xs text-white/60">
+                Select an item → <span className="text-white/80">Delete</span> to remove ·{" "}
+                <span className="text-white/80">↑↓←→</span> to nudge ·{" "}
+                <span className="text-white/80">Shift</span> = 10px
+                {selectedItem?.type === "text" ? (
+                    <>
+                        {" "}
+                        · <span className="text-white/80">Double-click</span> to edit text
+                    </>
+                ) : null}
+                {selectedItem?.type === "image" || "color" ? (
+                    <>
+                        {" "}
+                        · Drag corners resize ·<span className="text-white/80"> Shift </span> = keep constraints
+                    </>
+                ) : null}
+            </p>
+        </div>
+    );
 
     const Controls = (
         <div className="flex flex-col gap-4">
@@ -59,14 +87,23 @@ export default function Toolbar({ state, dispatch, variant }: ToolbarProps) {
                     placeholder="Paste image URL…"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") addImageFromUrl();
+                    }}
                 />
                 <button
                     type="button"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-3 py-2 text-sm font-medium text-white shadow-lg shadow-purple-500/30 transition-all hover:scale-101 hover:shadow-purple-500/50 cursor-pointer"
+                    disabled={!canAddImage}
+                    className={[
+                        "inline-flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white transition-all",
+                        canAddImage
+                            ? "bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 hover:scale-101 cursor-pointer"
+                            : "bg-white/10 text-white/40 cursor-not-allowed",
+                    ].join(" ")}
                     onClick={addImageFromUrl}
                 >
                     <ImagePlus size={16} />
-                    Add image
+                    Add Image
                 </button>
             </div>
 
@@ -74,7 +111,7 @@ export default function Toolbar({ state, dispatch, variant }: ToolbarProps) {
             <div className="space-y-2">
                 <button
                     type="button"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-3 py-2 text-sm font-medium text-white shadow-lg shadow-purple-500/30 transition-all hover:scale-101 hover:shadow-purple-500/50 cursor-pointer"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-3 py-2 text-sm font-medium text-white transition-all hover:scale-101 cursor-pointer"
                     onClick={toggleAddColor}
                 >
                     <Square size={16} />
@@ -118,13 +155,16 @@ export default function Toolbar({ state, dispatch, variant }: ToolbarProps) {
 
                 <button
                     type="button"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-3 py-2 text-sm font-medium text-white shadow-lg shadow-purple-500/30 transition-all hover:scale-101 hover:shadow-purple-500/50 cursor-pointer"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500 px-3 py-2 text-sm font-medium text-white transition-all hover:scale-101 cursor-pointer"
                     onClick={() => dispatch({ type: "ADD_TEXT_ITEM" })}
                 >
                     <Type size={16} />
-                    Add text
+                    Add Text
                 </button>
             </div>
+
+            {/* Tips: show when something is selected */}
+            {state.selectedItemId ? TipsBox : null}
         </div>
     );
 
@@ -162,7 +202,6 @@ export default function Toolbar({ state, dispatch, variant }: ToolbarProps) {
                         className="flex flex-col items-center gap-1 text-white/80 transition-colors hover:text-violet-400 cursor-pointer"
                         onClick={() => {
                             setIsSheetOpen(true);
-                            // focus URL input next paint
                             setTimeout(() => urlRef.current?.focus(), 0);
                         }}
                         aria-label="Add image"
@@ -184,8 +223,7 @@ export default function Toolbar({ state, dispatch, variant }: ToolbarProps) {
                     <button
                         type="button"
                         className="flex flex-col items-center gap-1 text-white/80 transition-colors hover:text-violet-400 cursor-pointer"
-                        onClick={() =>
-                            dispatch({ type: "ADD_TEXT_ITEM" })}
+                        onClick={() => dispatch({ type: "ADD_TEXT_ITEM" })}
                         aria-label="Add text"
                     >
                         <Type size={20} />
