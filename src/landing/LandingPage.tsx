@@ -299,7 +299,7 @@ const LandingPage = () => {
             <header className="sticky top-0 z-50 border-b border-white/10 bg-black/20 backdrop-blur-xl">
                 <div className="container mx-auto flex items-center justify-between px-6 py-4">
                     <Reveal show={isVisible} delayMs={0}>
-                        <h1 className="text-lg font-semibold text-white">Mooder</h1>
+                        <h1 className="text-lg font-semibold text-white">moodser</h1>
                         <p className="text-sm text-slate-400">Visual thinking on a canvas</p>
                     </Reveal>
 
@@ -410,9 +410,9 @@ const LandingPage = () => {
                                 Built as a focused, design-first experiment.
                             </h2>
                             <p className="mt-3 text-lg text-slate-600">
-                                Mooder was built for the start of a project: collecting references, testing colors, and writing quick
+                                <span className="font-bold">moodser</span> was built for the start of a project: collecting references, testing colors, and writing quick
                                 notes. Most workflows force you to download assets, open a bulky tool, and fight UI just to place a few
-                                images and swatches. Mooder keeps it simple: one canvas, the essentials, and you’re moving fast.
+                                images and swatches. <span className="font-bold">moodser</span> keeps it simple: one canvas, the essentials, and you’re moving fast.
                             </p>
                         </Reveal>
 
@@ -754,15 +754,7 @@ const LandingPage = () => {
                                     >
                                         Open the editor
                                     </button>
-                                    <a
-                                        href="https://github.com/tiagocostarebelo/mooder"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="cursor-pointer flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-8 py-3.5 text-base font-medium text-white backdrop-blur-xl transition-all hover:bg-white/10"
-                                    >
-                                        <Github className="h-4 w-4" />
-                                        View on GitHub
-                                    </a>
+
                                 </div>
                             </Reveal>
                         </div>
@@ -775,7 +767,7 @@ const LandingPage = () => {
                 <div className="container mx-auto px-6">
                     <div className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
                         <div>
-                            <p className="text-sm text-slate-400">© 2026 Mooder</p>
+                            <p className="text-sm text-slate-400">© 2026 <span className="font-bold">moodser</span></p>
                             <p className="mt-1 text-sm text-slate-500">
                                 Built by{" "}
                                 <a

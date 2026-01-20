@@ -19,10 +19,10 @@ export default function AppLayout({
             <header className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
                 <div className="flex w-full items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-500 shadow-lg shadow-purple-500/50" />
+
                         <div className="leading-tight">
                             <a href="/" className="text-sm font-semibold tracking-tight text-white">
-                                Mooder
+                                <span className="font-bold">moodser</span>
                             </a>
                             <p className="text-xs text-slate-400">Editor</p>
                         </div>
