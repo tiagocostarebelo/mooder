@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { Github, Play, Palette, Layers, MousePointer2, Zap, Download, Sparkles } from "lucide-react";
+import { Play, Palette, Layers, MousePointer2, Zap, Download, Sparkles } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import moodboardThinking from "../assets/support_thinking.webp";
 import moodboardHero from "../assets/app_preview.webp";
