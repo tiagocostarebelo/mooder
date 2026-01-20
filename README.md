@@ -1,4 +1,4 @@
-# Mooder
+# Moodser
 
 A lightweight moodboard editor built with React + TypeScript + Vite for quickly composing ideas with notes, color swatches, and images, then exporting the board as a PNG.
 
