@@ -687,20 +687,40 @@ const LandingPage = () => {
                         </Reveal>
 
                         <Reveal show={isSectionVisible("demo")} delayMs={300}>
-                            <Card variant="dark" className="p-8" hover={false}>
-                                <div className="absolute -inset-4 animate-pulse rounded-3xl bg-gradient-to-r from-pink-500/30 via-violet-500/30 to-cyan-500/30 blur-2xl" />
+                            <Card variant="dark" className="relative p-8" hover={false}>
+                                {/* glow */}
+                                <div className="pointer-events-none absolute -inset-4 animate-pulse rounded-3xl bg-gradient-to-r from-pink-500/30 via-violet-500/30 to-cyan-500/30 blur-2xl" />
 
-                                <div className="relative flex aspect-video items-center justify-center rounded-lg bg-white shadow-2xl">
-                                    <div className="text-center">
-                                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-violet-500 to-cyan-500 shadow-lg">
-                                            <Play className="h-10 w-10 text-white" />
-                                        </div>
-                                        <p className="text-lg font-medium text-slate-600">Demo video placeholder</p>
-                                        <p className="text-sm text-slate-400">Coming soon</p>
+                                {/* frame */}
+                                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-2xl">
+                                    {/* aspect wrapper */}
+                                    <div className="relative aspect-video">
+                                        <video
+                                            src="https://res.cloudinary.com/dfnqamudd/video/upload/f_auto,q_auto/Moodser_-_Video_intro_utcupt"
+                                            autoPlay
+                                            muted
+                                            loop
+                                            playsInline
+                                            preload="metadata"
+                                            poster="https://res.cloudinary.com/dfnqamudd/image/upload/f_auto,q_auto/Moodser_video_poster"
+                                            className="absolute inset-0 h-full w-full object-cover"
+                                        />
+
+                                        {/* subtle dark gradient for readability */}
+                                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0" />
+
+
+                                    </div>
+
+                                    {/* optional caption row */}
+                                    <div className="flex items-center justify-between gap-3 px-4 py-3 text-xs text-white/60">
+                                        <span>Quick walkthrough • from blank canvas to export</span>
+                                        <span className="hidden sm:inline">~59s</span>
                                     </div>
                                 </div>
                             </Card>
                         </Reveal>
+
                     </div>
                 </div>
             </SectionShell>
